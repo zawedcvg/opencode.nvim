@@ -102,7 +102,6 @@ end
 ---@return Promise<opencode.server.Server>
 function M.get()
   local Promise = require("opencode.promise")
-  local connected_server = require("opencode.events").connected_server
 
   return find()
     :catch(function(err)
@@ -121,8 +120,9 @@ function M.get()
       return poll()
     end)
     :next(function(server) ---@param server opencode.server.Server
+      local connected_server = require("opencode.events").connected_server
       if not connected_server or connected_server.port ~= server.port then
-        require("opencode.events").connect(server)
+        server:connect()
       end
       return server
     end)

@@ -26,6 +26,8 @@
 ---@field cwd string
 ---@field title string
 ---@field subagents opencode.server.Agent[]
+---@field subscription_job_id? number
+---@field heartbeat_timer? uv_timer_t
 local Server = {}
 Server.__index = Server
 
@@ -35,7 +37,10 @@ Server.__index = Server
 ---@param port number
 ---@return Promise<opencode.server.Server>
 function Server.new(port)
-  local self = setmetatable({ port = port }, Server)
+  local self = setmetatable({}, Server)
+  self.port = port
+  self.heartbeat_timer = vim.uv.new_timer()
+
   local Promise = require("opencode.promise")
 
   return Promise.new(function(resolve, reject)
@@ -329,6 +334,70 @@ end
 ---@return number job_id
 function Server:sse_subscribe(on_success, on_error)
   return self:curl("/event", "GET", nil, on_success, on_error, { persistent = true })
+end
+
+---How often `opencode` sends heartbeat events.
+local OPENCODE_HEARTBEAT_INTERVAL_MS = 30000
+
+---Subscribe to this server's SSE stream and dispatch autocmds for received events.
+---Disconnects any previously-connected server first.
+---Cleared when the server disposes itself, the connection errors, the heartbeat disappears, or we connect to a new server.
+function Server:connect()
+  local events = require("opencode.events")
+  if events.connected_server and events.connected_server ~= self then
+    events.connected_server:disconnect()
+  end
+
+  require("opencode.promise")
+    .resolve(self)
+    :next(function()
+      self.subscription_job_id = self:sse_subscribe(function(response)
+        events.connected_server = self
+
+        if self.heartbeat_timer then
+          self.heartbeat_timer:start(OPENCODE_HEARTBEAT_INTERVAL_MS + 5000, 0, vim.schedule_wrap(self.disconnect))
+        end
+
+        if require("opencode.config").opts.events.enabled then
+          vim.api.nvim_exec_autocmds("User", {
+            pattern = "OpencodeEvent:" .. response.type,
+            data = {
+              event = response,
+              -- Can't pass metatable through here, so listeners need to reconstruct the server object if they want to use its methods
+              port = self.port,
+            },
+          })
+        end
+      end, function()
+        -- This is also called when the connection is closed normally by `vim.fn.jobstop`.
+        -- i.e. when disconnecting before connecting to a new server.
+        -- In that case, don't re-execute disconnect - it'd disconnect from the new server.
+        if events.connected_server == self then
+          -- Server disappeared ungracefully, e.g. process killed, network error, etc.
+          self:disconnect()
+        end
+      end)
+    end)
+    :catch(function(err)
+      vim.notify("Failed to subscribe to SSEs: " .. err, vim.log.levels.WARN, { title = "opencode" })
+    end)
+end
+
+---Unsubscribe from this server's SSE stream and stop the heartbeat timer.
+---Clears `events.connected_server` if it points to this server.
+function Server:disconnect()
+  if self.subscription_job_id then
+    vim.fn.jobstop(self.subscription_job_id)
+    self.subscription_job_id = nil
+  end
+  if self.heartbeat_timer then
+    self.heartbeat_timer:stop()
+  end
+
+  local events = require("opencode.events")
+  if events.connected_server == self then
+    events.connected_server = nil
+  end
 end
 
 return Server
