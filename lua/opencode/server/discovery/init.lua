@@ -1,19 +1,5 @@
 local M = {}
 
----Try to start an `opencode` server via `opts.server.start`.
-local function start()
-  local server_opts = require("opencode.config").opts.server or {}
-
-  if not server_opts.start then
-    error("No `opts.server.start` function configured", 0)
-  end
-
-  local start_ok, start_result = pcall(server_opts.start)
-  if not start_ok then
-    return error("Failed to start `opencode`: " .. start_result, 0)
-  end
-end
-
 ---Find an `opencode` server. Tries, in order:
 ---
 ---1. The currently subscribed server in `opencode.events`.
@@ -110,11 +96,16 @@ function M.get()
         return Promise.reject()
       end
 
-      local start_ok = pcall(start)
-      if not start_ok then
-        -- Propagate original error.
-        -- Maybe concat start error?
+      local start = require("opencode.config").opts.server.start
+
+      if not start then
+        -- Propagate original error
         return Promise.reject(err)
+      end
+
+      local start_ok, start_result = pcall(start)
+      if not start_ok then
+        return Promise.reject("Failed to start `opencode`: " .. start_result)
       end
 
       return poll()
