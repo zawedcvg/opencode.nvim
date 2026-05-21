@@ -6,15 +6,9 @@ body:
   - type: checkboxes
     attributes:
       options:
-        - label: I am using the latest version
-          required: true
         - label: I searched the docs
           required: true
-        - label: I searched the [opencode docs](https://opencode.ai/docs)
-          required: true
-        - label: I searched the existing issues
-          required: true
-        - label: I searched the existing [opencode issues](https://github.com/sst/opencode/issues)
+        - label: I searched existing issues
           required: true
   - type: textarea
     attributes:
