@@ -347,7 +347,7 @@ function Server:sse_subscribe(on_success, on_error)
 end
 
 ---How often `opencode` sends heartbeat events.
-local OPENCODE_HEARTBEAT_INTERVAL_MS = 30000
+local OPENCODE_HEARTBEAT_INTERVAL_MS = 10000
 
 ---The currently connected server.
 ---Cleared when the server disposes itself, the connection errors, or the heartbeat disappears.
@@ -371,7 +371,7 @@ function Server:connect()
     self.subscription_job_id = self:sse_subscribe(
       function(response)
         if self.heartbeat_timer then
-          self.heartbeat_timer:start(OPENCODE_HEARTBEAT_INTERVAL_MS + 5000, 0, vim.schedule_wrap(self.disconnect))
+          self.heartbeat_timer:start(OPENCODE_HEARTBEAT_INTERVAL_MS + 1000, 0, vim.schedule_wrap(self.disconnect))
         end
 
         if response.type == "server.connected" then
