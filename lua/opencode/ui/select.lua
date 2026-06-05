@@ -101,24 +101,6 @@ function M.select(opts)
             preview = { text = "" },
           })
         end
-        if config.opts.server.stop then
-          table.insert(items, {
-            __type = "server",
-            name = "server.stop",
-            text = "Stop server",
-            highlights = { { "Stop configured server", "Comment" } },
-            preview = { text = "" },
-          })
-        end
-        if config.opts.server.toggle then
-          table.insert(items, {
-            __type = "server",
-            name = "server.toggle",
-            text = "Toggle server",
-            highlights = { { "Toggle configured server", "Comment" } },
-            preview = { text = "" },
-          })
-        end
       end
 
       for i, item in ipairs(items) do
@@ -188,10 +170,6 @@ function M.select(opts)
             end)
         elseif choice.name == "server.start" then
           return require("opencode").start()
-        elseif choice.name == "server.stop" then
-          return require("opencode").stop()
-        elseif choice.name == "server.toggle" then
-          return require("opencode").toggle()
         end
       else
         return Promise.reject("Unknown item: " .. choice.name)

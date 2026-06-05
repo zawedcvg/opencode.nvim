@@ -87,15 +87,6 @@ M.operator = require("opencode.api.operator").operator
 --- Server ---
 ----------------
 
----Toggle the configured `opencode` server.
-M.toggle = function()
-  local opts = require("opencode.config").opts
-  if opts.server and opts.server.toggle then
-    opts.server.toggle()
-  else
-    vim.notify("No `opts.server.toggle` function configured", vim.log.levels.ERROR, { title = "opencode" })
-  end
-end
 ---Start the configured `opencode` server.
 M.start = function()
   local opts = require("opencode.config").opts
@@ -103,15 +94,6 @@ M.start = function()
     opts.server.start()
   else
     vim.notify("No `opts.server.start` function configured", vim.log.levels.ERROR, { title = "opencode" })
-  end
-end
----Stop the configured `opencode` server.
-M.stop = function()
-  local opts = require("opencode.config").opts
-  if opts.server and opts.server.stop then
-    opts.server.stop()
-  else
-    vim.notify("No `opts.server.stop` function configured", vim.log.levels.ERROR, { title = "opencode" })
   end
 end
 

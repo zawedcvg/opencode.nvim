@@ -12,17 +12,9 @@
 ---Basic auth password.
 ---@field password? string
 ---
----Start your `opencode` server.
+---Start an `opencode` server.
 ---Called when when none are found; will retry after.
 ---@field start? fun()|false
----
----Stop your `opencode` server.
----Called when Neovim is exiting.
----@field stop? fun()|false
----
----Show/hide your `opencode` server.
----Never called by `opencode.nvim`, but included for consistency.
----@field toggle? fun()|false
 
 ---An `opencode` server.
 ---@class opencode.server.Server
