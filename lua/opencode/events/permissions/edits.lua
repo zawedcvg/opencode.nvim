@@ -14,13 +14,24 @@ local diff_tabpage = nil
 ---@param server opencode.server.Server
 function M.diff(event, server)
   local opts = require("opencode.config").opts.events.permissions or {}
-
   if event.type == "permission.asked" and event.properties.permission == "edit" then
     -- TODO: Handle multi-file edits?
     -- When would opencode even do that?
     -- for _, file in ipairs(event.properties.metadata.diff) do
 
     local diff = event.properties.metadata.diff
+
+    local filepath = event.properties.metadata.filepath
+    local absolute_filepath = vim.fn.fnamemodify(filepath, ":p")
+
+    if vim.fn.filereadable(absolute_filepath) == 1 then
+      filepath = absolute_filepath
+    elseif vim.env.HOME and vim.env.HOME ~= "" then
+      local home_filepath = vim.fs.normalize(vim.fs.joinpath(vim.env.HOME, filepath))
+      if vim.fn.filereadable(home_filepath) == 1 then
+        filepath = home_filepath
+      end
+    end
 
     local patch_filepath = vim.fn.tempname() .. ".patch"
     if vim.fn.writefile(vim.split(diff, "\n"), patch_filepath) ~= 0 then
@@ -32,13 +43,15 @@ function M.diff(event, server)
       return
     end
 
-    local filepath = event.properties.metadata.filepath
+    local escaped_filepath = vim.fn.fnameescape(filepath)
+    local escaped_new_filepath = vim.fn.fnameescape(filepath .. ".new")
+    local escaped_patch_filepath = vim.fn.fnameescape(patch_filepath)
     -- Close any buffer with the same name, to avoid "Buffer with this name already exists" error when successive edit requests come in for the same file.
-    vim.cmd("silent! bwipeout " .. filepath .. ".new")
+    pcall(vim.cmd, "silent! bwipeout " .. escaped_new_filepath)
 
     -- Diffing changes some of the buffer's display options (namely folding) to make it easier to compare side-by-side,
     -- so open the target file in a new tab first.
-    vim.cmd("tabnew " .. filepath)
+    vim.cmd("tabnew " .. escaped_filepath)
     -- FIX: Sometimes rejects? Or displays no changes? Particularly with a single inline change. Malformed patch?
     vim.cmd("silent vert diffpatch " .. patch_filepath)
 
@@ -70,10 +83,10 @@ function M.diff(event, server)
       return "do"
     end, { buffer = true, desc = "Reject opencode edit hunk", expr = true })
     -- Accept/reject edit as a whole
-    vim.keymap.set("n", "da", function()
+    vim.keymap.set("n", "<leader><leader>ca", function()
       permit("once")
     end, { buffer = true, desc = "Accept opencode edit" })
-    vim.keymap.set("n", "dr", function()
+    vim.keymap.set("n", "<leader><leader>cr", function()
       permit("reject")
     end, { buffer = true, desc = "Reject opencode edit" })
     -- Close diff
@@ -84,6 +97,7 @@ function M.diff(event, server)
     end, { buffer = true, desc = "Close opencode edit diff" })
   elseif event.type == "permission.replied" and current_edit_request_id == event.properties.requestID then
     -- Entire edit was accepted or rejected, either in the plugin or TUI; close the diff
+    -- #NOTE: i don't think it works when accepting/rejecting from the TUI
     current_edit_request_id = nil
     if diff_tabpage and vim.api.nvim_tabpage_is_valid(diff_tabpage) then
       vim.api.nvim_set_current_tabpage(diff_tabpage)
