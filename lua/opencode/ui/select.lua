@@ -87,7 +87,7 @@ function M.select(opts, server)
       __type = "server",
       name = "server.select",
       text = "Select server",
-      highlights = { { "Select local server", "Comment" } },
+      highlights = { { "Select server", "Comment" } },
       preview = { text = "" },
     })
     if config.opts.server.start then
@@ -160,10 +160,26 @@ function M.select(opts, server)
           return require("opencode.api.command").command(choice.name, server)
         end
       elseif choice.__type == "server" then
-        -- TODO: Include configured server
         if choice.name == "server.select" then
           return require("opencode.server.discovery")
-            .get_all()
+            .locally()
+            :next(function(servers) ---@param servers opencode.server.Server[]
+              local configured = require("opencode.server.discovery").configured()
+              if configured then
+                return configured:next(function(configured_server) ---@param configured_server opencode.server.Server
+                  if
+                    not vim.tbl_contains(servers, function(local_server)
+                      return local_server.url == configured_server.url
+                    end, { predicate = true })
+                  then
+                    table.insert(servers, 1, configured_server)
+                  end
+                  return servers
+                end)
+              else
+                return servers
+              end
+            end)
             :next(function(servers) ---@param servers opencode.server.Server[]
               return require("opencode.ui.select_server").select_server(servers)
             end)
