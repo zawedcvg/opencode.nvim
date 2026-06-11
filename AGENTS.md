@@ -67,4 +67,9 @@ stylua .
 - **Events**: SSE subscribed on `connect()`, dispatched as `OpencodeEvent:<type>` User autocmds
 - **Edit review**: opens diff in new tab via `:diffpatch`, keymaps `da`/`dr` to accept/reject, `dp`/`do` for per-hunk
 - **Ask completion**: in-process LSP server (`lua/opencode/ui/ask/cmp.lua`) providing context placeholder + agent completions
+- **Integration policy**: code that bridges another tool _to_ opencode.nvim (e.g. picker send, terminal toggle) belongs in README examples. Code that enhances opencode.nvim's own UI (ask/select with snacks input/picker) stays in the plugin.
 - **Operator**: `operator()` sets `operatorfunc`, uses `g@` for range + dot-repeat support
+
+## Project vision
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for project guidelines, priorities, and maintenance philosophy. When in doubt, follow the patterns already in the codebase.
