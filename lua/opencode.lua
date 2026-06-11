@@ -129,6 +129,8 @@ function M.operator(prompt)
   return "g@"
 end
 
+M.format = require("opencode.context").format
+
 ----------------
 --- Server ---
 ----------------
@@ -142,11 +144,4 @@ function M.start()
     vim.notify("No `opts.server.start` function configured", vim.log.levels.ERROR, { title = "opencode" })
   end
 end
-
---------------------
---- Integrations ---
---------------------
-
-M.snacks_picker_send = require("opencode.integrations.pickers.snacks").send
-
 return M
