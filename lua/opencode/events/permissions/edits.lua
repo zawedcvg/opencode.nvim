@@ -32,6 +32,8 @@ function M.diff(event, server)
       if vim.fn.filereadable(home_filepath) == 1 then
         filepath = home_filepath
       end
+    else
+      vim.notify("Cannot resolve opencode edit target file: " .. filepath, vim.log.levels.WARN, { title = "opencode" })
     end
 
     local patch_filepath = vim.fn.tempname() .. ".patch"
