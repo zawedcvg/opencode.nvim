@@ -32,8 +32,11 @@ function M.diff(event, server)
       if vim.fn.filereadable(home_filepath) == 1 then
         filepath = home_filepath
       end
-    else
-      vim.notify("Cannot resolve opencode edit target file: " .. filepath, vim.log.levels.WARN, { title = "opencode" })
+    end
+
+    if vim.fn.filereadable(filepath) ~= 1 then
+      vim.notify("Cannot resolve opencode edit target file: " .. filepath, vim.log.levels.ERROR, { title = "opencode" })
+      return
     end
 
     local patch_filepath = vim.fn.tempname() .. ".patch"
@@ -100,7 +103,6 @@ function M.diff(event, server)
     end, { buffer = true, desc = "Close opencode edit diff" })
   elseif event.type == "permission.replied" and current_edit_request_id == event.properties.requestID then
     -- Entire edit was accepted or rejected, either in the plugin or TUI; close the diff
-    -- #NOTE: i don't think it works when accepting/rejecting from the TUI
     current_edit_request_id = nil
     if diff_tabpage and vim.api.nvim_tabpage_is_valid(diff_tabpage) then
       vim.api.nvim_set_current_tabpage(diff_tabpage)
