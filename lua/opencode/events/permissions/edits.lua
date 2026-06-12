@@ -35,7 +35,7 @@ function M.diff(event, server)
     end
 
     if vim.fn.filereadable(filepath) ~= 1 then
-      vim.notify("Cannot resolve opencode edit target file: " .. filepath, vim.log.levels.ERROR, { title = "opencode" })
+      vim.notify("Cannot resolve OpenCode edit target file: " .. filepath, vim.log.levels.ERROR, { title = "opencode" })
       return
     end
 
