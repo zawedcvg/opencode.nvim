@@ -54,7 +54,7 @@ function M.select(opts)
     end)
 end
 
-M.statusline = require("opencode.status").statusline
+M.statusline = require("opencode.events.status").statusline
 
 ------------------------
 --- Programmatic API ---
